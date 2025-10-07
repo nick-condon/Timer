@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Countdown Timer</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f5f5f5;
+    }
+    #container {
+      width: 100%;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+#logo {
+      max-width: 250px;
+      width: 50%;
+      height: auto;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+    #timer {
+      font-size: 12vw;
+      font-weight: bold;
+      width: 100%;
+      margin-bottom: 20px;
+      color: #333;
+      user-select: none;
+    }
+    .time-inputs {
+      margin-bottom: 20px;
+    }
+    .time-inputs input {
+      width: 60px;
+      font-size: 1.5em;
+      padding: 5px;
+      margin: 0 5px;
+      text-align: center;
+    }
+    button {
+      font-size: 1.5em;
+      padding: 10px 15px;
+      margin: 5px;
+      min-width: 90px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #0078D7;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: default;
+    }
+    button:hover:not(:disabled) {
+      background-color: #005A9E;
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+<img id="logo" src="https://lh3.googleusercontent.com/sitesv/AICyYdYqlpGsrjkktUbtr6zSLJknMDNzGHPWOgiGxZK1IgVgCDsD9evCq2wyDl4zL8ei3I8eYm-bNSnAw2FRPxXr0U9kkbuQk-U_2NQR1RJ9c4810CwB5rcB8WKG1KM7zp1t0EN6O5CnML6PQZK9bGqv1w7olLkj6srPQNr8RQq7LYGdMwXsPw=w16383" alt="Dili International School Logo" />
+
+  <div id="timer">0h 00m 00s</div>
+
+  <div class="time-inputs" id="timeInputs">
+    <input type="number" id="hoursInput" min="0" max="9" value="1" />h
+    <input type="number" id="minutesInput" min="00" max="59" value="00" />m
+    <input type="number" id="secondsInput" min="00" max="59" value="00" />s
+  </div>
+
+  <button id="startBtn">Start</button>
+  <button id="pauseBtn" disabled>Pause</button>
+  <button id="stopBtn" disabled>Stop</button>
+  <button id="resetBtn" disabled>Reset</button>
+</div>
+
+<script>
+  let countdownDuration = 3600; // default 1 hour in seconds
+  let timeLeft = countdownDuration;
+  let timerInterval = null;
+  let isPaused = false;
+
+  const timerDisplay = document.getElementById("timer");
+  const startBtn = document.getElementById("startBtn");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const timeInputsDiv = document.getElementById("timeInputs");
+
+  const hoursInput = document.getElementById("hoursInput");
+  const minutesInput = document.getElementById("minutesInput");
+  const secondsInput = document.getElementById("secondsInput");
+
+  function updateDisplay() {
+    let hours = Math.floor(timeLeft / 3600);
+    let minutes = Math.floor((timeLeft % 3600) / 60);
+    let seconds = timeLeft % 60;
+
+    timerDisplay.textContent =
+      String(hours).padStart(2) + "h " +
+      String(minutes).padStart(2, "0") + "m " +
+      String(seconds).padStart(2, "0") + "s";
+  }
+
+  function startTimer() {
+    if (timerInterval !== null) return; // prevent multiple intervals
+
+    // Set countdownDuration based on inputs on start
+    let h = parseInt(hoursInput.value) || 0;
+    let m = parseInt(minutesInput.value) || 0;
+    let s = parseInt(secondsInput.value) || 0;
+
+    // Validate inputs
+    if (h < 0) h = 0;
+    if (m < 0 || m > 59) m = 0;
+    if (s < 0 || s > 59) s = 0;
+
+    countdownDuration = h * 3600 + m * 60 + s;
+    if (countdownDuration === 0) return; // do not start if zero time
+
+    timeLeft = countdownDuration;
+    updateDisplay();
+
+    // Hide the time inputs once started
+    timeInputsDiv.style.display = 'none';
+
+    isPaused = false;
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    stopBtn.disabled = false;
+    resetBtn.disabled = false;
+
+    timerInterval = setInterval(() => {
+      if (!isPaused) {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateDisplay();
+        } else {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          timerDisplay.textContent = "TIME'S UP!";
+          startBtn.disabled = false;
+          pauseBtn.disabled = true;
+          stopBtn.disabled = true;
+
+          // Show the time inputs again when timer finishes
+          timeInputsDiv.style.display = 'block';
+        }
+      }
+    }, 1000);
+  }
+
+  function pauseTimer() {
+    if (timerInterval === null) return;
+    isPaused = !isPaused;
+    pauseBtn.textContent = isPaused ? "Resume" : "Pause";
+  }
+
+  function stopTimer() {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+    timeLeft = countdownDuration;
+    updateDisplay();
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    pauseBtn.textContent = "Pause";
+    stopBtn.disabled = true;
+    resetBtn.disabled = true;
+
+    // Show the time inputs again when stopped
+    timeInputsDiv.style.display = 'block';
+  }
+
+  function resetTimer() {
+    timeLeft = countdownDuration;
+    updateDisplay();
+    if (timerInterval === null) {
+      pauseBtn.disabled = true;
+      stopBtn.disabled = true;
+      resetBtn.disabled = true;
+      startBtn.disabled = false;
+      pauseBtn.textContent = "Pause";
+
+      // Show the time inputs when reset
+      timeInputsDiv.style.display = 'block';
+    }
+  }
+
+  startBtn.addEventListener("click", startTimer);
+  pauseBtn.addEventListener("click", pauseTimer);
+  stopBtn.addEventListener("click", stopTimer);
+  resetBtn.addEventListener("click", resetTimer);
+
+  // Initialize display on load
+  updateDisplay();
+</script>
+
+</body>
+</html>
